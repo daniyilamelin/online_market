@@ -6,6 +6,7 @@
 *.db
 *.sqlite
 *.sqlite3
+!true_detective.db   # не ігнорувати цю конкретну базу
 
 # Python
 __pycache__/

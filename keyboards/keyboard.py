@@ -64,6 +64,10 @@ admin_menu = ReplyKeyboardMarkup(
         [
             KeyboardButton(text = "Додати категорію"),
             KeyboardButton(text = "Видалити категорію")
+        ],
+        [
+            KeyboardButton(text = "Закрити магазин"),
+            KeyboardButton(text = "Відкрити магазин")
         ]
     ],
     resize_keyboard=True, 
@@ -71,4 +75,3 @@ admin_menu = ReplyKeyboardMarkup(
 )
 
 del_smth = ReplyKeyboardRemove()
-

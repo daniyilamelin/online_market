@@ -4,6 +4,7 @@ import aiogram
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.types import CallbackQuery
 from bot_main import DB_PATH
+import datetime
 
 
 async def test_db():
@@ -169,7 +170,7 @@ async def create_category(category: str):
     category = category.strip()
 
     # 2️⃣ Прибираємо тільки небезпечні спецсимволи, але ЗАЛИШАЄМО пробіли
-    category = re.sub(r'[^A-Za-zА-Яа-я0-9_ ]', '', category)
+    category = re.sub(r'[^\w\s]', '', category, flags=re.UNICODE)
     #                                      ❗️ Додав пробіл у дозволені символи
 
     # 3️⃣ Заміняємо множинні пробіли на один
@@ -252,3 +253,57 @@ async def get_all_categories():
 
         print(f"✅ Знайдено категорії: {categories}")  # Для перевірки
         return categories
+
+
+
+import aiosqlite
+from bot_main import DB_PATH  # твій шлях до бази
+
+# ------------------------
+# Створення таблиці (на старті)
+# ------------------------
+async def init_shop_status_table():
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute("DROP TABLE IF EXISTS shop_status")  # для тестів
+        await db.execute("""
+            CREATE TABLE shop_status (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                is_closed BOOLEAN NOT NULL
+            )
+        """)
+        await db.commit()
+    print("✅ Таблиця shop_status створена заново")
+
+
+# ------------------------
+# Закрити / Відкрити магазин
+# ------------------------
+async def set_shop_status(closed: bool):
+    async with aiosqlite.connect(DB_PATH) as db:
+        # залишаємо тільки останній запис
+        await db.execute("DELETE FROM shop_status")
+        await db.execute(
+            "INSERT INTO shop_status (is_closed) VALUES (?)",
+            (int(closed),)
+        )
+        await db.commit()
+
+
+# ------------------------
+# Перевірка статусу магазину
+# ------------------------
+async def is_shop_closed() -> bool:
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        async with db.execute(
+            "SELECT is_closed FROM shop_status ORDER BY id DESC LIMIT 1"
+        ) as cursor:
+            row = await cursor.fetchone()
+            if row:
+                return bool(row["is_closed"])
+    return False
+
+
+
+
+
